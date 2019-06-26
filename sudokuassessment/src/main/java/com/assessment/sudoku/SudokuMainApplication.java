@@ -1,7 +1,10 @@
 package com.assessment.sudoku;
 
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.assessessment.sudoku.util.SudokuUtil;
 
@@ -11,7 +14,7 @@ public class SudokuMainApplication
 {
 
 	final String FILE_NAME="board.json";
-
+	Logger log =LoggerFactory.getLogger(this.getClass());
 	public static void main(String args[])
 	{
 		SudokuMainApplication sudokuMainApplication = new SudokuMainApplication();
@@ -22,10 +25,9 @@ public class SudokuMainApplication
 	 * @param input the args
 	 * @return the result
 	 **/
-	private boolean process(String input[])
+	public boolean process(String input[])
 	{
 		InputStream inputStream = null;
-		JSONObject jsonObject = null;
 		boolean sudokuSolved = false;
 		try
 		{
@@ -33,25 +35,14 @@ public class SudokuMainApplication
 
 			if (inputStream != null)
 			{
-				BufferedReader streamReader = new BufferedReader(
-						new InputStreamReader(inputStream, "UTF-8"));
-				StringBuilder responseStrBuilder = new StringBuilder();
+				JSONArray inputArray = convertToJsonArray(input, inputStream);
 
-				String inputStr;
-				while ((inputStr = streamReader.readLine()) != null)
-					responseStrBuilder.append(inputStr);
-				jsonObject = new JSONObject(responseStrBuilder.toString());
-				JSONArray inputArray = (JSONArray) jsonObject.get(input[0]);
+				String[] strArray = constructArrayObject(inputArray);
 
-				String inputArrayReplacedWithCurlyBraces = inputArray.toString().replace("[", "{").replace("]", "}");
+				char[][] boardInputArray = SudokuUtil.convertToTwoDimArray(strArray);
 
-				String strArray[] = inputArrayReplacedWithCurlyBraces.split("},");
-
-				char[][] boardInputArray = convertToTwoDimArray(strArray);
 				sudokuSolved=SudokuUtil.isValidSudoku(boardInputArray);
-
-				System.out.println("BoardInput = "+input[0]+ " | SudokuBoardInputValid? :"+ sudokuSolved);
-
+				log.info("BoardInput = "+input[0]+ " | SudokuBoardInputValid? :"+ sudokuSolved);
 			}
 		}
 		catch (UnsupportedEncodingException e)
@@ -64,11 +55,31 @@ public class SudokuMainApplication
 		}
 		catch (Exception e)
 		{
-			System.out.println("Exception: " + e);
+			log.error("Exception in process method::"+e);
 		}
 
 		return sudokuSolved;
 
+	}
+	private String[] constructArrayObject(JSONArray inputArray) {
+		String inputArrayReplacedWithCurlyBraces = inputArray.toString().replace("[", "{").replace("]", "}");
+
+		String strArray[] = inputArrayReplacedWithCurlyBraces.split("},");
+		return strArray;
+	}
+	private JSONArray convertToJsonArray(String[] input, InputStream inputStream)
+			throws UnsupportedEncodingException, IOException {
+		JSONObject jsonObject;
+		BufferedReader streamReader = new BufferedReader(
+				new InputStreamReader(inputStream, "UTF-8"));
+		StringBuilder responseStrBuilder = new StringBuilder();
+
+		String inputStr;
+		while ((inputStr = streamReader.readLine()) != null)
+			responseStrBuilder.append(inputStr);
+		jsonObject = new JSONObject(responseStrBuilder.toString());
+		JSONArray inputArray = (JSONArray) jsonObject.get(input[0]);
+		return inputArray;
 	}
 
 	/**
@@ -77,15 +88,7 @@ public class SudokuMainApplication
 	 * @param strArr the str arr
 	 * @return the result
 	 **/
-	private char[][] convertToTwoDimArray(String[] strArr)
-	{
-		char[][] ret = new char[strArr.length][];
-		for (int i = 0; i < strArr.length; i++)
-		{
-			ret[i] = strArr[i].replaceAll("[{]", "").replaceAll(",", "").toCharArray();
-		}
-		return ret;
-	}
+	
 
 
 }

@@ -69,5 +69,13 @@ public class SudokuUtil {
 
 		return true;
 	}
-
+	public static char[][] convertToTwoDimArray(String[] strArr)
+	{
+		char[][] ret = new char[strArr.length][];
+		for (int i = 0; i < strArr.length; i++)
+		{
+			ret[i] = strArr[i].replaceAll("[{]", "").replaceAll(",", "").toCharArray();
+		}
+		return ret;
+	}
 }
